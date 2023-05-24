@@ -18,12 +18,19 @@ io.on('connection', (socket) => {
 
     socket.on('msg_send', async (data) => {
         console.log(data);
+       try{
         const chat = await Chat.create({
             roomId: data.roomid,
             user: data.username,
             content: data.msg
         });
         io.to(data.roomid).emit('msg_rcvd', data);
+       }
+         catch(err){
+        console.log("error in msg send",err);
+        throw new Error(err);
+         }
+        
     });
 
     socket.on('typing', (data) => {
@@ -34,6 +41,7 @@ app.set('view engine', 'ejs');
 app.use('/', express.static(__dirname + '/public'));
 
 app.get('/chat/:roomid', async (req, res) => {
+   try{
     const chats = await Chat.find({
         roomId: req.params.roomid
     }).select('content user');
@@ -43,10 +51,22 @@ app.get('/chat/:roomid', async (req, res) => {
         id: req.params.roomid,
         chats: chats
     });
+   }
+    catch(err){ 
+    console.log("error in chat route",err);
+    throw new Error(err);
+    }
 });
+
 
 server.listen(3000, async () => {
     console.log('Server started');
-    await connect();
-    console.log("mongo db connected")
+    try{
+        await connect();
+        console.log("mongo db connected")
+    }
+    catch(err){
+        console.log("error in connecting the mongo server",err);
+    }
+    
 });
